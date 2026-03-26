@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Velox — The Modern Workflow Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink:       #0a0a0f;
+    --ink-2:     #2e2e3a;
+    --ink-3:     #6b6b80;
+    --ink-4:     #9f9fb5;
+    --bg:        #f7f7fc;
+    --surface:   #ffffff;
+    --border:    #e4e4f0;
+    --accent:    #3d5afe;
+    --accent-2:  #00c8aa;
+    --accent-glow: rgba(61,90,254,.18);
+    --radius:    14px;
+    --radius-lg: 24px;
+    --shadow-sm: 0 1px 4px rgba(10,10,30,.06);
+    --shadow:    0 4px 24px rgba(10,10,30,.10);
+    --shadow-lg: 0 16px 64px rgba(10,10,30,.14);
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --ease-out:  cubic-bezier(.16,1,.3,1);
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ── Typography ── */
+  h1,h2,h3,h4 { font-family: var(--font-head); line-height: 1.1; font-weight: 700; }
+
+  /* ── Utilities ── */
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .75rem; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-glow);
+    border: 1px solid rgba(61,90,254,.25);
+    padding: 5px 12px; border-radius: 100px;
+    margin-bottom: 20px;
+  }
+  .tag::before { content:''; display:block; width:6px; height:6px; border-radius:50%; background:var(--accent); }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(28px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+  @keyframes float {
+    0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);}
+  }
+  @keyframes pulse-glow {
+    0%,100%{box-shadow:0 0 0 0 var(--accent-glow);}
+    50%{box-shadow:0 0 0 16px transparent;}
+  }
+  @keyframes slide-in {
+    from{transform:translateX(-12px);opacity:0;}
+    to{transform:translateX(0);opacity:1;}
+  }
+  .reveal { opacity: 0; animation: fadeUp .7s var(--ease-out) forwards; }
+  .reveal.d1 { animation-delay: .08s; }
+  .reveal.d2 { animation-delay: .18s; }
+  .reveal.d3 { animation-delay: .28s; }
+  .reveal.d4 { animation-delay: .38s; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 0 32px;
+    background: rgba(247,247,252,.82);
+    backdrop-filter: blur(18px) saturate(160%);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+    animation: fadeIn .5s ease forwards;
+  }
+  .nav-logo {
+    font-family: var(--font-head); font-weight: 800; font-size: 1.35rem;
+    color: var(--ink); text-decoration: none; letter-spacing: -.02em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-logo span {
+    display: inline-block; width: 28px; height: 28px; border-radius: 8px;
+    background: var(--accent); position: relative;
+  }
+  .nav-logo span::after {
+    content:''; position:absolute; bottom:5px; right:5px;
+    width:10px; height:10px; border-radius:3px; background:rgba(255,255,255,.5);
+  }
+  .nav-menu { display: flex; align-items: center; gap: 36px; list-style: none; }
+  .nav-menu a {
+    font-size: .9rem; font-weight: 500; color: var(--ink-2);
+    text-decoration: none; transition: color .2s;
+  }
+  .nav-menu a:hover { color: var(--accent); }
+  .nav-actions { display: flex; align-items: center; gap: 12px; }
+  .btn-ghost {
+    font-family: var(--font-body); font-size: .875rem; font-weight: 500;
+    color: var(--ink-2); background: none; border: none; cursor: pointer;
+    padding: 8px 14px; border-radius: 8px; transition: background .2s, color .2s;
+  }
+  .btn-ghost:hover { background: var(--border); color: var(--ink); }
+  .btn-primary {
+    font-family: var(--font-body); font-size: .875rem; font-weight: 600;
+    color: #fff; background: var(--accent); border: none; cursor: pointer;
+    padding: 9px 20px; border-radius: 9px;
+    transition: transform .15s, box-shadow .15s, background .15s;
+    box-shadow: 0 2px 12px rgba(61,90,254,.35);
+  }
+  .btn-primary:hover { background:#2a45e8; transform:translateY(-1px); box-shadow:0 6px 20px rgba(61,90,254,.4); }
+  .btn-primary:active { transform:translateY(0); }
+  .btn-xl {
+    font-size: 1rem; padding: 14px 32px; border-radius: 12px;
+    display: inline-flex; align-items: center; gap: 8px;
+    animation: pulse-glow 2.4s ease infinite;
+  }
+  .btn-xl svg { transition: transform .2s; }
+  .btn-xl:hover svg { transform: translateX(3px); }
+  .btn-outline {
+    font-family: var(--font-body); font-size: 1rem; font-weight: 500;
+    color: var(--ink-2); background: var(--surface); border: 1.5px solid var(--border);
+    cursor: pointer; padding: 13px 28px; border-radius: 12px;
+    transition: border-color .2s, color .2s, box-shadow .2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 144px 0 100px;
+    position: relative; overflow: hidden;
+    text-align: center;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(61,90,254,.09), transparent),
+      radial-gradient(ellipse 40% 40% at 80% 80%, rgba(0,200,170,.07), transparent);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 30%, black, transparent);
+    mask-image: radial-gradient(ellipse 70% 70% at 50% 30%, black, transparent);
+    opacity: .55;
+  }
+  .hero-inner { position: relative; z-index: 1; }
+  .hero h1 {
+    font-size: clamp(2.6rem, 6vw, 4.5rem);
+    letter-spacing: -.035em;
+    color: var(--ink);
+    margin-bottom: 20px;
+    max-width: 800px; margin-left: auto; margin-right: auto;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-desc {
+    font-size: 1.125rem; font-weight: 300; color: var(--ink-3);
+    max-width: 520px; margin: 0 auto 40px; line-height: 1.75;
+  }
+  .hero-cta { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  .hero-social-proof {
+    margin-top: 56px;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    font-size: .85rem; color: var(--ink-4);
+  }
+  .avatar-stack { display: flex; }
+  .avatar-stack img, .avatar-stack span {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 2px solid var(--surface);
+    margin-left: -10px; object-fit: cover;
+    font-size: .7rem; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff;
+  }
+  .avatar-stack span:nth-child(1) { background:#8b5cf6; margin-left:0; }
+  .avatar-stack span:nth-child(2) { background:#f59e0b; }
+  .avatar-stack span:nth-child(3) { background:#10b981; }
+  .avatar-stack span:nth-child(4) { background:#ef4444; }
+  .stars { color: #f59e0b; font-size: 1rem; letter-spacing: 1px; }
+
+  /* ── Hero Dashboard Mock ── */
+  .hero-visual {
+    margin: 72px auto 0;
+    max-width: 880px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,.8) inset;
+    overflow: hidden;
+    animation: float 5s ease-in-out infinite;
+    position: relative; z-index: 1;
+  }
+  .mock-topbar {
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: 12px 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .mock-dot { width:11px; height:11px; border-radius:50%; }
+  .mock-dot.r { background:#ff5f57; }
+  .mock-dot.y { background:#febc2e; }
+  .mock-dot.g { background:#28c840; }
+  .mock-tabs { display:flex; gap:4px; margin-left:16px; }
+  .mock-tab {
+    font-size:.78rem; color:var(--ink-3); padding:4px 12px;
+    border-radius:6px; font-family:var(--font-body);
+  }
+  .mock-tab.active { background:var(--accent-glow); color:var(--accent); font-weight:600; }
+  .mock-body { padding: 24px; display: grid; grid-template-columns: 200px 1fr; gap: 20px; }
+  .mock-sidebar { display:flex; flex-direction:column; gap:4px; }
+  .mock-nav-item {
+    font-size:.8rem; font-family:var(--font-body); color:var(--ink-3);
+    padding: 7px 12px; border-radius:8px; display:flex; align-items:center; gap:8px;
+  }
+  .mock-nav-item.active { background:var(--accent-glow); color:var(--accent); font-weight:600; }
+  .mock-nav-item .icon { width:16px; height:16px; border-radius:4px; background:currentColor; opacity:.5; flex-shrink:0; }
+  .mock-content { display:flex; flex-direction:column; gap:16px; }
+  .mock-stat-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .mock-stat {
+    background:var(--bg); border:1px solid var(--border);
+    border-radius:10px; padding:14px 16px;
+  }
+  .mock-stat .label { font-size:.72rem; color:var(--ink-4); font-family:var(--font-body); margin-bottom:4px; }
+  .mock-stat .value { font-size:1.3rem; font-weight:700; font-family:var(--font-head); color:var(--ink); }
+  .mock-stat .delta { font-size:.72rem; color:#00c8aa; margin-top:2px; }
+  .mock-chart {
+    background:var(--bg); border:1px solid var(--border);
+    border-radius:10px; padding:16px;
+  }
+  .mock-chart-title { font-size:.78rem; font-weight:600; color:var(--ink-2); margin-bottom:12px; font-family:var(--font-body); }
+  .mock-bars { display:flex; align-items:flex-end; gap:6px; height:70px; }
+  .mock-bar {
+    flex:1; border-radius:4px 4px 0 0; background:var(--border);
+    transition:height .3s;
+  }
+  .mock-bar.hi { background:linear-gradient(180deg,var(--accent),#8b9dff); }
+
+  /* ── FEATURES ── */
+  .features { padding: 110px 0; }
+  .section-header { text-align: center; margin-bottom: 64px; }
+  .section-header h2 {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    letter-spacing: -.03em; color: var(--ink); margin-bottom: 16px;
+  }
+  .section-header p { font-size: 1.05rem; color: var(--ink-3); max-width: 480px; margin: 0 auto; font-weight:300; }
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 36px;
+    transition: transform .25s var(--ease-out), box-shadow .25s, border-color .25s;
+    cursor: default;
+    position: relative; overflow: hidden;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    opacity: 0; transition: opacity .3s;
+  }
+  .feature-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: transparent; }
+  .feature-card:hover::before { opacity: 1; }
+  .feat-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: var(--accent-glow); border: 1px solid rgba(61,90,254,.2);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+    font-size: 1.4rem;
+  }
+  .feature-card h3 {
+    font-size: 1.15rem; font-weight: 700; color: var(--ink);
+    margin-bottom: 10px; letter-spacing: -.02em;
+  }
+  .feature-card p { font-size: .9rem; color: var(--ink-3); line-height: 1.7; font-weight:300; }
+
+  /* ── HOW IT WORKS ── */
+  .hiw { padding: 100px 0; background: var(--ink); position: relative; overflow: hidden; }
+  .hiw::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(61,90,254,.12), transparent);
+  }
+  .hiw .section-header h2 { color: #fff; }
+  .hiw .section-header p { color: rgba(255,255,255,.5); }
+  .hiw .tag { color: var(--accent-2); background: rgba(0,200,170,.12); border-color: rgba(0,200,170,.25); }
+  .hiw .tag::before { background: var(--accent-2); }
+  .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 0; position:relative; z-index:1; }
+  .steps::before {
+    content:''; position:absolute; top:28px; left:calc(16.6% + 20px); right:calc(16.6% + 20px);
+    height:1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+    z-index:0;
+  }
+  .step { padding: 40px 32px; text-align: center; position: relative; }
+  .step-num {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.12);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-weight: 800; font-size: 1.2rem;
+    color: rgba(255,255,255,.5);
+    margin: 0 auto 28px;
+    position: relative; z-index: 1;
+  }
+  .step.active .step-num {
+    background: var(--accent); border-color: var(--accent);
+    color: #fff; box-shadow: 0 0 32px rgba(61,90,254,.4);
+  }
+  .step h3 { font-size: 1.1rem; color: #fff; margin-bottom: 10px; }
+  .step p { font-size: .875rem; color: rgba(255,255,255,.45); line-height: 1.75; font-weight:300; }
+
+  /* ── TESTIMONIALS ── */
+  .testimonials { padding: 110px 0; }
+  .testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  .testi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    transition: transform .2s var(--ease-out), box-shadow .2s;
+  }
+  .testi-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .testi-card.featured {
+    background: var(--ink);
+    border-color: transparent;
+    grid-row: span 1;
+  }
+  .testi-stars { color: #f59e0b; font-size: .95rem; letter-spacing: 2px; margin-bottom: 18px; }
+  .testi-quote {
+    font-size: .95rem; line-height: 1.75; margin-bottom: 24px;
+    font-style: italic; font-weight: 300;
+  }
+  .testi-card:not(.featured) .testi-quote { color: var(--ink-2); }
+  .testi-card.featured .testi-quote { color: rgba(255,255,255,.7); }
+  .testi-author { display: flex; align-items: center; gap: 12px; }
+  .testi-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    font-size: .8rem; font-weight: 700; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .testi-name { font-size: .875rem; font-weight: 600; }
+  .testi-card:not(.featured) .testi-name { color: var(--ink); }
+  .testi-card.featured .testi-name { color: #fff; }
+  .testi-role { font-size: .78rem; }
+  .testi-card:not(.featured) .testi-role { color: var(--ink-4); }
+  .testi-card.featured .testi-role { color: rgba(255,255,255,.4); }
+
+  /* ── PRICING ── */
+  .pricing { padding: 100px 0; background: var(--bg); }
+  .pricing-toggle {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    margin-bottom: 56px; font-size: .875rem; color: var(--ink-3);
+  }
+  .toggle {
+    width: 44px; height: 24px; border-radius: 100px;
+    background: var(--accent); cursor: pointer;
+    border: none; position: relative;
+    transition: background .2s;
+  }
+  .toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 18px; height: 18px; border-radius: 50%; background: #fff;
+    transition: left .2s;
+  }
+  .badge-save {
+    background: rgba(0,200,170,.12); color: var(--accent-2);
+    font-size: .7rem; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 100px;
+    border: 1px solid rgba(0,200,170,.3);
+  }
+  .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; align-items: start; }
+  .plan {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 36px;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .plan:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .plan.popular {
+    background: var(--ink); border-color: transparent;
+    transform: scale(1.04);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(61,90,254,.3);
+  }
+  .plan.popular:hover { transform: scale(1.04) translateY(-4px); }
+  .plan-label {
+    font-size: .7rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; margin-bottom: 20px;
+  }
+  .plan:not(.popular) .plan-label { color: var(--ink-3); }
+  .plan.popular .plan-label { color: var(--accent-2); }
+  .plan-badge {
+    display: inline-block; background: rgba(61,90,254,.15); color: var(--accent);
+    font-size: .7rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 6px;
+    border: 1px solid rgba(61,90,254,.25); margin-left: 8px;
+    vertical-align: middle;
+  }
+  .plan.popular .plan-badge { background: rgba(0,200,170,.12); color: var(--accent-2); border-color: rgba(0,200,170,.3); }
+  .price {
+    display: flex; align-items: baseline; gap: 4px;
+    margin-bottom: 8px;
+  }
+  .price-cur { font-size: 1.1rem; font-weight: 600; }
+  .price-num { font-family: var(--font-head); font-size: 3rem; font-weight: 800; line-height: 1; letter-spacing: -.04em; }
+  .price-per { font-size: .85rem; font-weight: 300; }
+  .plan:not(.popular) .price-cur, .plan:not(.popular) .price-num, .plan:not(.popular) .price-per { color: var(--ink); }
+  .plan.popular .price-cur, .plan.popular .price-num, .plan.popular .price-per { color: #fff; }
+  .plan-desc { font-size: .85rem; margin-bottom: 28px; font-weight:300; }
+  .plan:not(.popular) .plan-desc { color: var(--ink-3); }
+  .plan.popular .plan-desc { color: rgba(255,255,255,.5); }
+  .plan-divider { border: none; border-top: 1px solid; margin-bottom: 24px; }
+  .plan:not(.popular) .plan-divider { border-color: var(--border); }
+  .plan.popular .plan-divider { border-color: rgba(255,255,255,.1); }
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+  .plan-features li {
+    font-size: .875rem; display: flex; align-items: center; gap: 10px; font-weight:300;
+  }
+  .plan:not(.popular) .plan-features li { color: var(--ink-2); }
+  .plan.popular .plan-features li { color: rgba(255,255,255,.7); }
+  .plan-features li::before {
+    content: '✓'; display: flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    font-size: .65rem; font-weight: 800; flex-shrink: 0;
+  }
+  .plan:not(.popular) .plan-features li::before { background: rgba(0,200,170,.12); color: var(--accent-2); }
+  .plan.popular .plan-features li::before { background: rgba(0,200,170,.15); color: var(--accent-2); }
+  .plan-cta { width: 100%; }
+  .plan.popular .btn-primary { background: linear-gradient(135deg, var(--accent), #7c3aed); box-shadow: 0 4px 20px rgba(61,90,254,.4); }
+  .plan:not(.popular) .btn-primary { background: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .plan:not(.popular) .btn-primary:hover { background: #1a1a2e; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--ink); padding: 72px 0 36px;
+    border-top: 1px solid rgba(255,255,255,.06);
+  }
+  .footer-top {
+    display: grid; grid-template-columns: 1.6fr repeat(3,1fr);
+    gap: 48px; margin-bottom: 56px;
+  }
+  .footer-brand .nav-logo { color: #fff; margin-bottom: 16px; display: block; }
+  .footer-tagline { font-size: .875rem; color: rgba(255,255,255,.35); line-height: 1.7; max-width: 240px; font-weight:300; }
+  .footer-col h4 {
+    font-size: .75rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: rgba(255,255,255,.25);
+    margin-bottom: 20px; font-family: var(--font-body);
+  }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col ul a {
+    font-size: .875rem; color: rgba(255,255,255,.5); text-decoration: none;
+    transition: color .2s; font-weight:300;
+  }
+  .footer-col ul a:hover { color: rgba(255,255,255,.9); }
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,.07);
+    padding-top: 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: .8rem; color: rgba(255,255,255,.25);
+  }
+  .footer-socials { display: flex; gap: 12px; }
+  .social-link {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,.4); text-decoration: none;
+    font-size: .8rem; font-weight: 700;
+    transition: background .2s, color .2s;
+  }
+  .social-link:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .nav-menu { display: none; }
+    .feature-grid, .testi-grid, .pricing-grid { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; }
+    .steps::before { display: none; }
+    .mock-body { grid-template-columns: 1fr; }
+    .mock-sidebar { display: none; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+    .plan.popular { transform: scale(1); }
+    .hero h1 { font-size: 2.4rem; }
+    .mock-stat-row { grid-template-columns: repeat(2,1fr); }
+  }
+  @media (max-width: 600px) {
+    .container { padding: 0 20px; }
+    nav { padding: 0 20px; }
+    .footer-top { grid-template-columns: 1fr; }
+    .hero { padding: 110px 0 72px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="nav-logo" href="#">
+    <span></span>Velox
+  </a>
+  <ul class="nav-menu">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how-it-works">How it works</a></li>
+    <li><a href="#testimonials">Customers</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="btn-ghost">Log in</button>
+    <button class="btn-primary">Start free trial</button>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="container hero-inner">
+    <div class="tag reveal">Launching v2.0 — now with AI</div>
+    <h1 class="reveal d1">Work at the speed<br>of <em>your ambition</em></h1>
+    <p class="hero-desc reveal d2">Velox unifies your team's projects, data, and workflows into one beautifully simple platform — so you can ship faster and think less about tools.</p>
+    <div class="hero-cta reveal d3">
+      <button class="btn-primary btn-xl">
+        Get started free
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="btn-outline">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M6.5 5.5l4 2.5-4 2.5V5.5z" fill="currentColor"/>
+        </svg>
+        Watch demo
+      </button>
+    </div>
+    <div class="hero-social-proof reveal d4">
+      <div class="avatar-stack">
+        <span>JK</span><span>AL</span><span>MR</span><span>+</span>
+      </div>
+      <span class="stars">★★★★★</span>
+      <span>Loved by <strong>12,000+</strong> teams worldwide</span>
+    </div>
+
+    <!-- Dashboard Mockup -->
+    <div class="hero-visual reveal d4">
+      <div class="mock-topbar">
+        <div class="mock-dot r"></div>
+        <div class="mock-dot y"></div>
+        <div class="mock-dot g"></div>
+        <div class="mock-tabs">
+          <div class="mock-tab active">Dashboard</div>
+          <div class="mock-tab">Projects</div>
+          <div class="mock-tab">Analytics</div>
+        </div>
+      </div>
+      <div class="mock-body">
+        <div class="mock-sidebar">
+          <div class="mock-nav-item active"><div class="icon"></div> Dashboard</div>
+          <div class="mock-nav-item"><div class="icon"></div> Projects</div>
+          <div class="mock-nav-item"><div class="icon"></div> Team</div>
+          <div class="mock-nav-item"><div class="icon"></div> Reports</div>
+          <div class="mock-nav-item"><div class="icon"></div> Settings</div>
+        </div>
+        <div class="mock-content">
+          <div class="mock-stat-row">
+            <div class="mock-stat">
+              <div class="label">Revenue</div>
+              <div class="value">$84.2K</div>
+              <div class="delta">↑ 18.4% this month</div>
+            </div>
+            <div class="mock-stat">
+              <div class="label">Active Users</div>
+              <div class="value">4,291</div>
+              <div class="delta">↑ 7.1% this week</div>
+            </div>
+            <div class="mock-stat">
+              <div class="label">Tasks Done</div>
+              <div class="value">1,847</div>
+              <div class="delta">↑ 31% vs last week</div>
+            </div>
+          </div>
+          <div class="mock-chart">
+            <div class="mock-chart-title">Revenue over time</div>
+            <div class="mock-bars">
+              <div class="mock-bar" style="height:40%"></div>
+              <div class="mock-bar hi" style="height:55%"></div>
+              <div class="mock-bar" style="height:45%"></div>
+              <div class="mock-bar hi" style="height:70%"></div>
+              <div class="mock-bar" style="height:60%"></div>
+              <div class="mock-bar hi" style="height:80%"></div>
+              <div class="mock-bar" style="height:65%"></div>
+              <div class="mock-bar hi" style="height:90%"></div>
+              <div class="mock-bar" style="height:75%"></div>
+              <div class="mock-bar hi" style="height:100%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="tag">Features</div>
+      <h2>Everything your team needs<br>in one place</h2>
+      <p>Stop juggling a dozen apps. Velox brings everything together with the tools you actually need.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card reveal d1">
+        <div class="feat-icon">⚡</div>
+        <h3>Blazing-fast automation</h3>
+        <p>Build no-code workflows that run in milliseconds. Automate repetitive tasks across your entire stack and reclaim hours every week.</p>
+      </div>
+      <div class="feature-card reveal d2">
+        <div class="feat-icon">🔮</div>
+        <h3>AI-powered insights</h3>
+        <p>Get real-time, actionable recommendations powered by our proprietary ML models — trained on billions of workflow data points.</p>
+      </div>
+      <div class="feature-card reveal d3">
+        <div class="feat-icon">🔗</div>
+        <h3>200+ native integrations</h3>
+        <p>Connect with Slack, GitHub, Salesforce, Stripe, and every tool your team already loves — in seconds, not weeks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="hiw" id="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <div class="tag">How it works</div>
+      <h2>From sign-up to shipped<br>in under an hour</h2>
+      <p>Getting started is effortless. No engineering resources required.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal d1">
+        <div class="step-num">01</div>
+        <h3>Connect your stack</h3>
+        <p>Link your existing tools and data sources in minutes with one-click integrations and secure OAuth flows.</p>
+      </div>
+      <div class="step active reveal d2">
+        <div class="step-num">02</div>
+        <h3>Build your workflow</h3>
+        <p>Use our drag-and-drop builder — or let our AI suggest the optimal workflow based on your team's patterns.</p>
+      </div>
+      <div class="step reveal d3">
+        <div class="step-num">03</div>
+        <h3>Launch and iterate</h3>
+        <p>Go live with a single click. Track performance in real time and continuously improve with AI recommendations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ── -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="section-header">
+      <div class="tag">Testimonials</div>
+      <h2>Teams that ship faster<br>with Velox</h2>
+      <p>Don't take our word for it — hear from the teams building with Velox every day.</p>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card reveal d1">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"Velox cut our release cycle from two weeks to three days. The automation features are genuinely magical — it feels like we hired three extra engineers."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#6366f1">SR</div>
+          <div>
+            <div class="testi-name">Sarah Reinholt</div>
+            <div class="testi-role">VP Engineering, Nexus Labs</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card featured reveal d2">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"After trying eight different workflow tools, Velox is the only one that our entire team — from design to sales — actually uses every single day."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#f59e0b">TM</div>
+          <div>
+            <div class="testi-name">Tom Marchetti</div>
+            <div class="testi-role">CEO, Lightform Studio</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal d3">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"The AI insights alone are worth the subscription price ten times over. We discovered a bottleneck that was costing us $40K/month — in the first week."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#10b981">PK</div>
+          <div>
+            <div class="testi-name">Priya Kapoor</div>
+            <div class="testi-role">Head of Growth, Orbit AI</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ── -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <div class="tag">Pricing</div>
+      <h2>Honest pricing.<br>No surprises.</h2>
+      <p>Start free, scale when you're ready. Every plan includes a 14-day trial.</p>
+    </div>
+    <div class="pricing-toggle">
+      <span>Monthly</span>
+      <button class="toggle" aria-label="toggle billing period"></button>
+      <span>Annual</span>
+      <span class="badge-save">Save 25%</span>
+    </div>
+    <div class="pricing-grid">
+      <!-- Starter -->
+      <div class="plan reveal d1">
+        <div class="plan-label">Starter</div>
+        <div class="price">
+          <span class="price-cur">$</span>
+          <span class="price-num">19</span>
+          <span class="price-per">/ mo</span>
+        </div>
+        <p class="plan-desc">Perfect for small teams just getting started with workflow automation.</p>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>Up to 5 team members</li>
+          <li>10 active workflows</li>
+          <li>20 integrations</li>
+          <li>Basic analytics</li>
+          <li>Email support</li>
+        </ul>
+        <button class="btn-primary plan-cta">Start free trial</button>
+      </div>
+      <!-- Pro (popular) -->
+      <div class="plan popular reveal d2">
+        <div class="plan-label">Pro <span class="plan-badge">Most popular</span></div>
+        <div class="price">
+          <span class="price-cur">$</span>
+          <span class="price-num">79</span>
+          <span class="price-per">/ mo</span>
+        </div>
+        <p class="plan-desc">For scaling teams that need powerful automation and deep insights.</p>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>Up to 25 team members</li>
+          <li>Unlimited workflows</li>
+          <li>200+ integrations</li>
+          <li>AI-powered insights</li>
+          <li>Priority support (SLA)</li>
+          <li>Advanced analytics</li>
+        </ul>
+        <button class="btn-primary plan-cta">Start free trial</button>
+      </div>
+      <!-- Enterprise -->
+      <div class="plan reveal d3">
+        <div class="plan-label">Enterprise</div>
+        <div class="price">
+          <span class="price-num" style="font-size:2rem;line-height:1.3">Custom</span>
+        </div>
+        <p class="plan-desc">Tailored for large organizations with custom security and compliance needs.</p>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>Unlimited members</li>
+          <li>Unlimited everything</li>
+          <li>Custom integrations</li>
+          <li>SSO / SAML</li>
+          <li>Dedicated account manager</li>
+          <li>SLA & uptime guarantees</li>
+        </ul>
+        <button class="btn-primary plan-cta">Talk to sales</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="nav-logo" href="#">
+          <span></span>Velox
+        </a>
+        <p class="footer-tagline">The modern workflow platform for teams that want to move fast without breaking things.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Integrations</a></li>
+          <li><a href="#">Changelog</a></li>
+          <li><a href="#">Roadmap</a></li>
+          <li><a href="#">Status</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About us</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press kit</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy policy</a></li>
+          <li><a href="#">Terms of service</a></li>
+          <li><a href="#">Cookie policy</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Velox, Inc. All rights reserved.</span>
+      <div class="footer-socials">
+        <a class="social-link" href="#" title="Twitter">𝕏</a>
+        <a class="social-link" href="#" title="LinkedIn">in</a>
+        <a class="social-link" href="#" title="GitHub">gh</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Intersection Observer for scroll reveals
+  const revealEls = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.animationPlayState = 'running';
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  revealEls.forEach(el => {
+    el.style.animationPlayState = 'paused';
+    obs.observe(el);
+  });
+
+  // Animate mock bars on load
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.mock-bar').forEach((bar, i) => {
+      bar.style.transition = `height .6s cubic-bezier(.16,1,.3,1) ${i * 60}ms`;
+      const h = bar.style.height;
+      bar.style.height = '0';
+      setTimeout(() => { bar.style.height = h; }, 300);
+    });
+  });
+</script>
+</body>
+</html>
